@@ -21,6 +21,32 @@ The style file uses YAML frontmatter with these fields:
 
 The markdown body contains the behavioral instructions that shape Claude's responses.
 
-## No Build/Test/Lint
+## Formatting
 
-This is a documentation-only repo. There are no build steps, tests, or linting commands.
+Markdown files are formatted with Prettier. A PostToolUse hook in `.claude/settings.json` auto-formats `.md` files after Edit/Write tool calls.
+
+A git pre-commit hook checks staged `.md` files with Prettier. Since `.git/hooks/` is not tracked by git, you must ensure the hook exists. If `.git/hooks/pre-commit` is missing, create it:
+
+```sh
+#!/bin/sh
+
+# Check staged markdown files with prettier
+STAGED_MD=$(git diff --cached --name-only --diff-filter=ACM -- '*.md')
+
+if [ -n "$STAGED_MD" ]; then
+  # Filter out symlinks to avoid prettier errors
+  FILES=""
+  for f in $STAGED_MD; do
+    [ ! -L "$f" ] && FILES="$FILES $f"
+  done
+  if [ -n "$FILES" ]; then
+    echo "$FILES" | xargs prettier --check
+  fi
+fi
+```
+
+Make it executable: `chmod +x .git/hooks/pre-commit`
+
+## No Build/Test
+
+There are no build steps or test commands.
